@@ -1,0 +1,123 @@
+Practical Machine Learning - Activity prediction 
+========================================================
+
+## 1. Introduction 
+
+Based on data from activity trackers, the exercise paterns have to be predicted in this project. 
+
+## 2. Data Description  
+ 
+The data of this projects is sourced from The Pontifical Catholic University of Rio de Janeiro, Informatics Department & School of Computing and Communications, Lancaster University, UK [Details](http://groupware.les.inf.puc-rio.br/har#wle_paper_section#ixzz3KcyUsvj2)
+
+>Ugulino, W.; Cardador, D.; Vega, K.; Velloso, E.; Milidiu, R.; Fuks, H. Wearable Computing: Accelerometers' Data Classification of Body Postures and Movements. Proceedings of 21st Brazilian Symposium on Artificial Intelligence. Advances in Artificial Intelligence - SBIA 2012. In: Lecture Notes in Computer Science. , pp. 52-61. Curitiba, PR: Springer Berlin / Heidelberg, 2012. ISBN 978-3-642-34458-9. DOI: 10.1007/978-3-642-34459-6_6.
+
+```{r}
+# load libraries
+library(plyr);library(lattice);library(caret);
+library(randomForest);library(bitops);
+library(RCurl); library(downloader);library(ggplot2);
+set.seed(12345)
+  # load data (disabled due to slow internet connection)
+# urlTrain<-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv";
+# urlTest<-"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv";
+# download(urlTrain,destfile="pml-training.csv", mode = "wb");
+# download(urlTest,destfile="pml-testing.csv", mode = "wb");
+dataTrainRaw<-read.csv(file="pml-training.csv",head=TRUE ) 
+dataTestRaw<-read.csv(file="pml-testing.csv",head=TRUE ) 
+```
+
+The train-data consists of innitially `r nrow(dataTrainRaw)` individual observations. The test-data consists of `r nrow(dataTestRaw)` cases. Train-data and test-data share the following relevant features: 
+- X
+- user_name
+- roll_belt 
+- pitch_belt 
+- yaw_belt 
+- roll_dumbbell 
+- pitch_dumbbell 
+- yaw_dumbbell 
+- roll_forearm 
+- pitch_forearm 
+- yaw_forearm 
+- roll_arm 
+- pitch_arm 
+- yaw_arm
+
+Train and test data have two unique features:
+- classe .. train data 
+- problem_id .. test data
+
+## 3. Data Cleaning  
+
+Renaming of user_name feature-values into integer values 
+- adelmo->1 
+- carlitos->2
+- charles->3
+- eurico->4
+- jeremy->5
+- pedro->6
+
+Renaming of classe feature-values into integer values 
+- A->1
+- B->2
+- C->3
+- D->4
+- E->5
+
+```{r}
+# definition of collumn names for train and test data
+featureNames <- c('X','user_name','roll_belt','pitch_belt','yaw_belt','roll_dumbbell','pitch_dumbbell','yaw_dumbbell','roll_forearm','pitch_forearm','yaw_forearm','roll_arm','pitch_arm','yaw_arm')
+trainNames <- c( featureNames , 'classe')
+testNames <- c( featureNames , 'problem_id')
+
+# filter all non-relevant collumns out
+dataTrain <- dataTrainRaw[,trainNames]
+dataTest <- dataTestRaw[,testNames] 
+
+# change person names into integer values
+dataTrain[["user_name"]] <-revalue(dataTrain[["user_name"]], c("adelmo"="1", "carlitos"="2", "charles"="3", "eurico"="4", "jeremy"="5", "pedro"="6"))
+dataTest[["user_name"]] <-revalue(dataTest[["user_name"]], c("adelmo"="1", "carlitos"="2", "charles"="3", "eurico"="4", "jeremy"="5", "pedro"="6"))
+
+# tranform dataTrain and dataTest into matrixes
+dataTrain <- data.matrix(dataTrain)
+dataTest <- data.matrix(dataTest)
+```
+
+
+## 4. Classification Model - Training  
+
+For model training, a 3-fold cross-validation. Method: k-Nearest-Neighbors.
+
+```{r}
+# model training
+dataTrain <-data.frame(dataTrain)
+cvControl <-trainControl(method="cv", number=3, allowParallel=T, verbose=T)
+modelFit <- train(dataTrain$classe ~., data=dataTrain, method = "knn",
+                  preProcess='pca', trControl=cvControl , importance=TRUE);
+```
+
+
+## 5. Classification Model - Evaluation 
+
+```{r}
+# model testing with train data
+dataTrain <-data.frame(dataTrain)
+prediction <- round(predict(modelFit, newdata=dataTrain))
+
+confusionMatrix(data =  prediction , reference = dataTrain$classe )
+```
+
+Accuracy of >95% seems resonably good. 
+
+## 6. Classification Model - Prediction  
+ 
+
+```{r}
+prediction_test <- round(predict(modelFit, newdata=dataTest))
+prediction_test
+```
+
+However, the result with the test data looks rather suspicions. 
+
+
+
+
