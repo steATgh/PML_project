@@ -103,21 +103,14 @@ modelFit <- train(dataTrain$classe ~., data=dataTrain, method = "knn",
 dataTrain <-data.frame(dataTrain)
 prediction <- round(predict(modelFit, newdata=dataTrain))
 
-confusionMatrix(data =  prediction , reference = dataTrain$classe )
+cm <- confusionMatrix(data =  prediction , reference = dataTrain$classe )
+cm
 ```
 
 Accuracy of >95% seems resonably good. 
 
-## 6. Classification Model - Prediction  
- 
-
 ```{r}
-prediction_test <- round(predict(modelFit, newdata=dataTest))
-prediction_test
+# out-of-sample error
+outOfSampleError <- 1 - cm$overall[1]
+outOfSampleError
 ```
-
-However, the result with the test data looks rather suspicions. 
-
-
-
-

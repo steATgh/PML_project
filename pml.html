@@ -148,7 +148,8 @@ modelFit &lt;- train(dataTrain$classe ~., data=dataTrain, method = &quot;knn&quo
 dataTrain &lt;-data.frame(dataTrain)
 prediction &lt;- round(predict(modelFit, newdata=dataTrain))
 
-confusionMatrix(data =  prediction , reference = dataTrain$classe )</code></pre>
+cm &lt;- confusionMatrix(data =  prediction , reference = dataTrain$classe )
+cm</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
@@ -181,13 +182,11 @@ confusionMatrix(data =  prediction , reference = dataTrain$classe )</code></pre>
 ## Detection Prevalence   0.2846   0.1928   0.1751   0.1643   0.1833
 ## Balanced Accuracy      0.9991   0.9960   0.9964   0.9961   0.9969</code></pre>
 <p>Accuracy of &gt;95% seems resonably good.</p>
-</div>
-<div id="classification-model---prediction" class="section level2">
-<h2>6. Classification Model - Prediction</h2>
-<pre class="r"><code>prediction_test &lt;- round(predict(modelFit, newdata=dataTest))
-prediction_test</code></pre>
-<pre><code>##  [1] 2 1 1 1 1 1 1 2 1 1 2 1 1 1 2 1 1 2 2 2</code></pre>
-<p>However, the result with the test data looks rather suspicions.</p>
+<pre class="r"><code># out-of-sample error
+outOfSampleError &lt;- 1 - cm$overall[1]
+outOfSampleError</code></pre>
+<pre><code>##    Accuracy 
+## 0.004637652</code></pre>
 </div>
 </div>
 
